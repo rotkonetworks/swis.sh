@@ -32,7 +32,7 @@ const SectionsHeroSection = (props) => {
           </p>
 
           {/* Installation Command */}
-          <div class="mt-10 w-full">
+          <div class="mt-10 w-full text-left">
             <div class="max-w-xl bg-neutral-900 rounded-lg overflow-hidden border border-neutral-800">
               <div class="flex items-center justify-between px-4 py-2 bg-neutral-800/50">
                 <div class="flex items-center gap-2">

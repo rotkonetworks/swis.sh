@@ -6,10 +6,9 @@ export default function Nav() {
   const [navIsOpen, setNavIsOpen] = createSignal(false);
 
   const navItems = [
-    { id: 1, text: "Home", href: "/" },
-    { id: 2, text: "Docs", href: "/docs" },
-    { id: 3, text: "Transfer", href: "/transfer" },
-    { id: 4, text: "GitHub", href: "https://github.com/rotkonetworks/swissh" }
+    { id: 1, text: "Home", href: "/", enabled: true },
+    { id: 2, text: "About", href: "/about", enabled: true },
+    { id: 3, text: "Docs", href: "/docs", enabled: false },
   ];
 
   return (
@@ -27,15 +26,18 @@ export default function Nav() {
           {/* Desktop Navigation */}
           <div class="hidden md:flex items-center gap-8">
             {navItems.map(item => (
+              // if enabled, render the link, otherwise render a span
+              item.enabled ?
               <a 
                 href={item.href}
                 class="text-neutral-700 dark:text-neutral-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
               >
                 {item.text}
               </a>
+              : <span class="text-neutral-400">{item.text}</span>
             ))}
             <a 
-              href="/install"
+              href="https://github.com/rotkonetworks/swissh"
               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition-colors"
             >
               Install
