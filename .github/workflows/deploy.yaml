@@ -1,41 +1,56 @@
-name: Deploy to GitHub Pages
-
+name: Deploy to Production Server
+env:
+  SERVER_USER: 'swissh'
+  SERVER_IP: 'swis.sh'
+  DEPLOY_PATH: '/home/swissh/swis.sh/'
+  BACKUP_PATH: '/home/swissh/backup.swis.sh/'
 on:
   push:
     branches:
       - master  # Adjust if your main branch is named differently
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '18'
+          bun-version: latest
 
       - name: Install dependencies
-        run: |
-          corepack enable
-          yarn install
+        run: bun install
 
       - name: Build project
-        run: yarn build
+        run: bun run build
 
-      - name: Add CNAME file
-        run: echo "swis.sh" > .output/public/CNAME
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .output/public
-          keep_files: true
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add SSH Key to Known Hosts
+        run: |
+          echo "$(ssh-keyscan -t rsa ${{ env.SERVER_IP }} 2>/dev/null)" >> ~/.ssh/known_hosts
+
+      - name: Deploy using rsync
+        run: |
+          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_IP }} << EOF
+            set -euo pipefail
+            TIMESTAMP=\$(date +%Y%m%d%H%M%S)
+            
+            # Create backup directory if it doesn't exist
+            mkdir -p ${{ env.BACKUP_PATH }}
+            
+            # Backup existing deployment if it exists
+            if [ -d "${{ env.DEPLOY_PATH }}" ]; then
+              mv ${{ env.DEPLOY_PATH }} ${{ env.BACKUP_PATH }}/backup-\$TIMESTAMP
+            fi
+            
+            # Create new deployment directory
+            mkdir -p ${{ env.DEPLOY_PATH }}
+          EOF
+          
+          rsync -avz --delete .output/public/ ${{ env.SERVER_USER }}@${{ env.SERVER_IP }}:${{ env.DEPLOY_PATH }}/
