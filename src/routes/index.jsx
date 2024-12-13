@@ -14,9 +14,9 @@ const textData = {
     commands: {
       available: [
         { cmd: "swissh balance", desc: "Check your wallet" },
-        { cmd: "swissh transfer <AMOUNT> <TARGET>", desc: "Send assets" },
+        { cmd: "swissh transfer <AMOUNT> <ASSET> <TARGET>", desc: "Send assets" },
       ],
-      example: [
+      examples: [
         { cmd: "swissh transfer 10 USDT username.gh -i ~/.ssh/id_ed25519", desc: "Send dollars to GitHub user" },
       ]
     }
@@ -29,7 +29,7 @@ export default function Home() {
 
     const metaDescription = document.createElement('meta');
     metaDescription.name = 'description';
-    metaDescription.content = 'Use Ed25519 SSH keys for Polkadot transactions and X25519 encryption. Send crypto to any GitHub username.';
+    metaDescription.content = 'Use Ed25519 SSH keys for transactions. Send money to any GitHub username.';
     document.head.appendChild(metaDescription);
 
     const link = document.createElement('link');
