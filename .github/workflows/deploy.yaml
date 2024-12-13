@@ -4,6 +4,7 @@ env:
   SERVER_IP: 'swis.sh'
   DEPLOY_PATH: '/home/swissh/swis.sh/'
   DOCKER_IMAGE: 'swissh-app'
+  CONTAINER_PORT: '8091'
 
 on:
   push:
@@ -22,7 +23,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.DOCKER_IMAGE }} .
+          DOCKER_BUILDKIT=1 docker build \
+            --progress=plain \
+            --no-cache \
+            -t ${{ env.DOCKER_IMAGE }} .
 
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.5.3
@@ -31,6 +35,7 @@ jobs:
 
       - name: Add SSH Key to Known Hosts
         run: |
+          mkdir -p ~/.ssh
           echo "$(ssh-keyscan -t rsa ${{ env.SERVER_IP }} 2>/dev/null)" >> ~/.ssh/known_hosts
 
       - name: Save Docker image
@@ -43,13 +48,31 @@ jobs:
       - name: Deploy using Docker
         run: |
           ssh ${{ env.SERVER_USER }}@${{ env.SERVER_IP }} << 'EOF'
+            set -e
             cd ${{ env.DEPLOY_PATH }}
+            
+            # Load the new image
             docker load < image.tar.gz
+            
+            # Stop and remove the old container
             docker stop ${{ env.DOCKER_IMAGE }} || true
             docker rm ${{ env.DOCKER_IMAGE }} || true
-            docker run -d --name ${{ env.DOCKER_IMAGE }} \
+            
+            # Run the new container with port 8091 mapped to container's port 80
+            docker run -d \
+              --name ${{ env.DOCKER_IMAGE }} \
               -p 8091:80 \
               --restart unless-stopped \
               ${{ env.DOCKER_IMAGE }}
+            
+            # Verify the container is running
+            if ! docker ps | grep -q ${{ env.DOCKER_IMAGE }}; then
+              echo "Container failed to start"
+              docker logs ${{ env.DOCKER_IMAGE }}
+              exit 1
+            fi
+            
+            # Clean up
             rm image.tar.gz
+            docker image prune -f
           EOF
