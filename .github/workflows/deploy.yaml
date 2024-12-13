@@ -48,7 +48,7 @@ jobs:
             docker stop ${{ env.DOCKER_IMAGE }} || true
             docker rm ${{ env.DOCKER_IMAGE }} || true
             docker run -d --name ${{ env.DOCKER_IMAGE }} \
-              -p 80:80 \
+              -p 8091:80 \
               --restart unless-stopped \
               ${{ env.DOCKER_IMAGE }}
             rm image.tar.gz
