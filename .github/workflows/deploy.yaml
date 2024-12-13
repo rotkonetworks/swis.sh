@@ -3,11 +3,13 @@ env:
   SERVER_USER: 'swissh'
   SERVER_IP: 'swis.sh'
   DEPLOY_PATH: '/home/swissh/swis.sh/'
-  BACKUP_PATH: '/home/swissh/backup.swis.sh/'
+  DOCKER_IMAGE: 'swissh-app'
+
 on:
   push:
     branches:
-      - master  # Adjust if your main branch is named differently
+      - master
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -15,16 +17,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build project
-        run: bun run build
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.DOCKER_IMAGE }} .
 
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.5.3
@@ -35,22 +33,23 @@ jobs:
         run: |
           echo "$(ssh-keyscan -t rsa ${{ env.SERVER_IP }} 2>/dev/null)" >> ~/.ssh/known_hosts
 
-      - name: Deploy using rsync
+      - name: Save Docker image
+        run: docker save ${{ env.DOCKER_IMAGE }} | gzip > image.tar.gz
+
+      - name: Copy Docker image to server
         run: |
-          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_IP }} << EOF
-            set -euo pipefail
-            TIMESTAMP=\$(date +%Y%m%d%H%M%S)
-            
-            # Create backup directory if it doesn't exist
-            mkdir -p ${{ env.BACKUP_PATH }}
-            
-            # Backup existing deployment if it exists
-            if [ -d "${{ env.DEPLOY_PATH }}" ]; then
-              mv ${{ env.DEPLOY_PATH }} ${{ env.BACKUP_PATH }}/backup-\$TIMESTAMP
-            fi
-            
-            # Create new deployment directory
-            mkdir -p ${{ env.DEPLOY_PATH }}
+          scp image.tar.gz ${{ env.SERVER_USER }}@${{ env.SERVER_IP }}:${{ env.DEPLOY_PATH }}/
+
+      - name: Deploy using Docker
+        run: |
+          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_IP }} << 'EOF'
+            cd ${{ env.DEPLOY_PATH }}
+            docker load < image.tar.gz
+            docker stop ${{ env.DOCKER_IMAGE }} || true
+            docker rm ${{ env.DOCKER_IMAGE }} || true
+            docker run -d --name ${{ env.DOCKER_IMAGE }} \
+              -p 80:80 \
+              --restart unless-stopped \
+              ${{ env.DOCKER_IMAGE }}
+            rm image.tar.gz
           EOF
-          
-          rsync -avz --delete .output/public/ ${{ env.SERVER_USER }}@${{ env.SERVER_IP }}:${{ env.DEPLOY_PATH }}/
