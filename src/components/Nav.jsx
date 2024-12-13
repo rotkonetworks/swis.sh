@@ -5,110 +5,76 @@ export default function Nav() {
   const location = useLocation();
   const [navIsOpen, setNavIsOpen] = createSignal(false);
 
-  const active = (path) =>
-    path === location.pathname
-      ? "border-sky-600"
-      : "border-transparent hover:border-sky-600";
-
   const navItems = [
     { id: 1, text: "Home", href: "/" },
     { id: 2, text: "Docs", href: "/docs" },
-    { id: 3, text: "Docs", href: "/fund" },
+    { id: 3, text: "Transfer", href: "/transfer" },
+    { id: 4, text: "GitHub", href: "https://github.com/rotkonetworks/swissh" }
   ];
 
-  const toggleNavBar = () => {
-    setNavIsOpen(!navIsOpen());
-    document.body.classList.toggle("overflow-y-auto");
-  };
-
-  const closeNavBar = () => {
-    setNavIsOpen(false);
-    document.body.classList.add("overflow-y-auto");
-  };
-
   return (
-    <header class="absolute inset-x-0 top-0 z-50 py-6">
-      <div class="w-full px-5 sm:px-10 md:px-12 lg:px-5 mx-auto max-w-7xl">
-        <nav class="w-full flex justify-between gap-6 relative">
-          <div class="min-w-max inline-flex relative">
-            <a href="/" class="relative flex items-center gap-3">
-              <span class="flex">
-                <span class="w-3 h-6 rounded-l-full flex bg-emerald-600"></span>
-                <span class="w-3 h-6 rounded-r-full flex bg-teal-400 mt-1.5"></span>
-              </span>
-              <div class="inline-flex text-lg text-neutral-800 dark:text-white font-semibold">
-                swis.sh
-              </div>
+    <header class="fixed w-full top-0 z-50 backdrop-blur-sm bg-white/75 dark:bg-neutral-900/75 border-b border-neutral-200 dark:border-neutral-800">
+      <div class="max-w-7xl mx-auto px-4 py-4">
+        <nav class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="flex items-center">
+              <span class="w-2 h-4 rounded-l-full bg-emerald-600"></span>
+              <span class="w-2 h-4 rounded-r-full bg-teal-400 mt-1"></span>
+            </div>
+            <span class="font-mono font-bold text-lg dark:text-white">swis.sh</span>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div class="hidden md:flex items-center gap-8">
+            {navItems.map(item => (
+              <a 
+                href={item.href}
+                class="text-neutral-700 dark:text-neutral-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              >
+                {item.text}
+              </a>
+            ))}
+            <a 
+              href="/install"
+              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition-colors"
+            >
+              Install
             </a>
           </div>
 
-          <div
-            aria-hidden="true"
-            class={`fixed bg-border-neutral-700/50 inset-0 backdrop-filter backdrop-blur-xl bg-neutral-800/40 ${
-              navIsOpen() ? "flex lg:hidden" : "hidden lg:!hidden"
-            }`}
-          ></div>
-          <div
-            class={`absolute lg:relative w-full flex overflow-hidden duration-300 ease-linear lg:flex lg:w-auto lg:items-center ${
-              navIsOpen()
-                ? "translate-y-0 visible opacity-100"
-                : "translate-y-10 invisible opacity-0 lg:opacity-100 lg:visible lg:translate-y-0"
-            } top-full lg:top-0 border-t border-neutral-200 dark:border-neutral-700 lg:border-0 flex-col lg:flex-row gap-y-6 gap-x-4 lg:justify-between lg:items-center bg-white dark:bg-neutral-950 lg:!bg-transparent`}
+          {/* Mobile Navigation Button */}
+          <button
+            onClick={() => setNavIsOpen(!navIsOpen())}
+            class="md:hidden p-2"
+            aria-label="Toggle navigation"
           >
-            <ul class="px-6 lg:px-0 pt-6 lg:pt-0 flex flex-col lg:flex-row gap-y-4 gap-x-3 text-lg text-neutral-700 dark:text-neutral-300 w-full lg:justify-center lg:items-center">
-              {navItems.map((navItem) => (
-                <li key={navItem.id}>
-                  <a
-                    href={navItem.href}
-                    class={`duration-300 font-medium ease-linear hover:text-emerald-600 py-3 ${active(
-                      navItem.href
-                    )}`}
-                    onClick={closeNavBar}
-                  >
-                    {navItem.text}
-                  </a>
-                </li>
-              ))}
-            </ul>
-
-            <div class="lg:min-w-max flex items-center sm:w-max w-full pb-6 lg:pb-0 px-6 lg:px-0">
-              <a
-                href="/install"
-                class="flex justify-center items-center w-full sm:w-max px-6 h-12 bg-emerald-600 rounded-full relative overflow-hidden border border-transparent hover:border-emerald-700 duration-300 ease-linear"
-              >
-                <span class="relative z-10 text-white">Install</span>
-              </a>
-            </div>
-          </div>
-
-          <div class="min-w-max flex items-center gap-x-3">
-            <button
-              aria-label="toggle theme"
-              class="ui-toggle-theme"
-            ></button>
-            <button
-              aria-label="toggle navbar"
-              onClick={toggleNavBar}
-              class="lg:hidden outline-none w-7 h-auto flex flex-col relative bg-transparent"
-            >
-              <span
-                class={`bg-neutral-700 dark:bg-neutral-300 w-6 h-0.5 rounded-full transition-all duration-300 ease-linear ${
-                  navIsOpen() ? "translate-y-1.5 rotate-40" : ""
-                }`}
-              ></span>
-              <span
-                class={`bg-neutral-700 dark:bg-neutral-300 w-6 origin-center mt-1 h-0.5 rounded-full transition-all duration-300 ease-linear ${
-                  navIsOpen() ? "opacity-0 scale-x-0" : ""
-                }`}
-              ></span>
-              <span
-                class={`bg-neutral-700 dark:bg-neutral-300 w-6 mt-1 h-0.5 rounded-full transition-all duration-300 ease-linear ${
-                  navIsOpen() ? "-translate-y-1.5 -rotate-40" : ""
-                }`}
-              ></span>
-            </button>
-          </div>
+            <div class="i-carbon-menu text-2xl dark:text-white"></div>
+          </button>
         </nav>
+
+        {/* Mobile Navigation Menu */}
+        <div
+          class={`md:hidden absolute left-0 right-0 top-full bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 ${
+            navIsOpen() ? 'block' : 'hidden'
+          }`}
+        >
+          <div class="p-4 flex flex-col gap-4">
+            {navItems.map(item => (
+              <a 
+                href={item.href}
+                class="text-neutral-700 dark:text-neutral-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+              >
+                {item.text}
+              </a>
+            ))}
+            <a 
+              href="/install"
+              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-center"
+            >
+              Install
+            </a>
+          </div>
+        </div>
       </div>
     </header>
   );

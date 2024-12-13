@@ -3,13 +3,16 @@ import "virtual:uno.css";
 
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
-import { Suspense } from "solid-js";
+import { Suspense, onMount } from "solid-js";
 //import Nav from "~/components/Nav";
-          //<Nav />
 // import Footer from "~/components/Footer";
+//<Nav />
 // <Footer /> // rm now
 
 export default function App() {
+  onMount(() => {
+    console.log("App mounted");
+  });
   return (
     <Router
       root={(props) => (
